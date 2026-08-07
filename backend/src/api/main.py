@@ -81,6 +81,12 @@ extra = os.getenv("EXTRA_ALLOWED_ORIGINS", "")
 if extra:
     ALLOWED_ORIGINS += [o.strip() for o in extra.split(",") if o.strip()]
 
+# Auth middleware added first → becomes innermost (runs after CORS)
+from backend.src.middleware.auth import APIKeyMiddleware
+app.add_middleware(APIKeyMiddleware)
+
+# CORS added last → becomes outermost (runs before Auth, adds headers to ALL
+# responses including 401s, so browsers can read the error body cross-origin)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -88,13 +94,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ---------------------------------------------------------------------------
-# Auth middleware (X-API-Key)
-# ---------------------------------------------------------------------------
-
-from backend.src.middleware.auth import APIKeyMiddleware
-app.add_middleware(APIKeyMiddleware)
 
 # ---------------------------------------------------------------------------
 # Routers

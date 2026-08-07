@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode (unused — app is dark-only, but kept for completeness) */
+    --background: 240 48% 8%;
+    --foreground: 210 40% 95%;
+    --card: 220 46% 17%;
+    --card-foreground: 210 40% 95%;
+    --primary: 195 90% 62%;
+    --primary-foreground: 240 48% 8%;
+    --secondary: 240 29% 14%;
+    --secondary-foreground: 210 40% 95%;
+    --muted: 240 29% 14%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 240 29% 20%;
+    --accent-foreground: 210 40% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 18% 22%;
+    --input: 240 18% 22%;
+    --ring: 195 90% 62%;
+    --radius: 0.75rem;
+  }
+
+  /* App is dark-only — dark class matches :root */
+  .dark {
+    --background: 240 48% 8%;     /* #0F0F1A */
+    --foreground: 210 40% 95%;
+    --card: 220 46% 17%;          /* #16213E */
+    --card-foreground: 210 40% 95%;
+    --primary: 195 90% 62%;       /* sleep cyan #4CC9F0 */
+    --primary-foreground: 240 48% 8%;
+    --secondary: 240 29% 14%;     /* surface #1A1A2E */
+    --secondary-foreground: 210 40% 95%;
+    --muted: 240 29% 14%;         /* surface */
+    --muted-foreground: 215 20% 55%;
+    --accent: 240 29% 20%;
+    --accent-foreground: 210 40% 95%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 18% 22%;
+    --input: 240 18% 22%;
+    --ring: 195 90% 62%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Smooth scrolling */
+  html { scroll-behavior: smooth; }
+}
+
+@layer utilities {
+  /* Skeleton shimmer */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(240 29% 14%) 0%,
+      hsl(240 29% 20%) 50%,
+      hsl(240 29% 14%) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s infinite linear;
+  }
+
+  /* Glass card */
+  .glass {
+    background: rgba(22, 33, 62, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Hide scrollbar (keeps scroll functionality) */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}

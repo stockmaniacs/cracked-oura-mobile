@@ -250,8 +250,15 @@ async def run_download_existing_task():
         save_dir = str(get_user_data_dir())
         result = await automator.download_existing_export(save_dir=save_dir)
 
-        if isinstance(result, dict) and result.get("status") == "otp_required":
-            config_manager.update_status("Waiting for OTP...")
+        if isinstance(result, dict):
+            status = result.get("status", "error")
+            msg = result.get("message", "Unknown error")
+            if status == "otp_required":
+                config_manager.update_status("Waiting for OTP...")
+            else:
+                logger.error(f"Download failed: {msg}")
+                config_manager.update_status(f"Error: {msg}")
+            await automator.cleanup()
             return
 
         file_path = result
@@ -259,6 +266,7 @@ async def run_download_existing_task():
             await process_ingestion(file_path)
         else:
             logger.info("No existing export found.")
+            config_manager.update_status("No export found on server.")
 
         await automator.cleanup()
     except Exception as e:

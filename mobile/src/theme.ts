@@ -1,21 +1,30 @@
 /** Shared design tokens — mirrors web/src/index.css dark theme */
 export const THEME = {
-  bg:         '#0F0F1A',   // hsl(240 48% 8%)
-  card:       '#16213E',   // hsl(220 46% 17%)
-  surface:    '#1A1A2E',   // hsl(240 29% 14%)
+  // Backgrounds
+  background: '#0F0F1A',
+  surface:    '#1A1A2E',
+  card:       '#16213E',
   border:     'rgba(255,255,255,0.07)',
 
-  text:       '#E8EAF0',
-  muted:      '#8899aa',
+  // Alias kept for backward compat
+  bg:         '#0F0F1A',
 
-  sleep:      '#4CC9F0',
-  readiness:  '#4CAF50',
-  activity:   '#FF9800',
-  hrv:        '#AB47BC',
+  // Text
+  text:          '#FFFFFF',
+  textSecondary: '#B0BEC5',
+  muted:         '#8899aa',
 
-  good:       '#4CC9F0',
-  fair:       '#F59E0B',
-  poor:       '#EF4444',
+  // Category colours
+  sleep:     '#4CC9F0',
+  readiness: '#4CAF50',
+  activity:  '#FF9800',
+  hrv:       '#AB47BC',
+
+  // Status colours
+  error:  '#EF5350',
+  good:   '#4CC9F0',
+  fair:   '#F59E0B',
+  poor:   '#EF4444',
 } as const
 
 export type ThemeColor = typeof THEME[keyof typeof THEME]

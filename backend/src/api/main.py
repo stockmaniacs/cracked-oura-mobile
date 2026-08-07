@@ -72,7 +72,8 @@ ALLOWED_ORIGINS = [
     "http://localhost:5181",             # oura-web-dev preview port
     "http://localhost:3000",             # CRA / RN Metro fallback
     "http://localhost:8091",             # Self (dev)
-    "https://oura.stockmaniacs.net",     # Production web (Cloudflare Pages)
+    "https://oura.stockmaniacs.net",     # Production web (custom domain)
+    "https://oura-free.pages.dev",       # Cloudflare Pages canonical URL
     "capacitor://localhost",             # React Native iOS (Capacitor)
     "ionic://localhost",                 # React Native iOS (Ionic fallback)
 ]
@@ -90,6 +91,7 @@ app.add_middleware(APIKeyMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://[a-z0-9]+\.oura-free\.pages\.dev",  # CF Pages preview URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

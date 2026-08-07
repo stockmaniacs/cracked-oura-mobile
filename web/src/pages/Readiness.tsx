@@ -7,7 +7,7 @@ import { TrendChart } from '@/components/TrendChart'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { EmptyState } from '@/components/EmptyState'
 import { StatCardSkeleton, RingSkeleton, ChartSkeleton } from '@/components/Skeleton'
-import { COLORS, scoreLabel } from '@/types/oura'
+import { COLORS } from '@/types/oura'
 import type { TodaySummary, ReadinessDay } from '@/types/oura'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 
@@ -24,7 +24,7 @@ function ContributorRow({ label, value, impact }: {
 
   return (
     <div className="flex items-center gap-3">
-      <Icon size={13} style={{ color: iconColor, shrink: 0 }} className="shrink-0" />
+      <Icon size={13} style={{ color: iconColor, flexShrink: 0 }} className="shrink-0" />
       <span className="text-xs text-muted-foreground flex-1 capitalize">{label.replace(/_/g, ' ')}</span>
       <div className="w-28 rounded-full overflow-hidden h-1.5 bg-white/8">
         <div

@@ -59,7 +59,7 @@ export function TrendChart({ data, dataKey, dataKeys, color = PALETTE[0], showPo
             contentStyle={{ backgroundColor:'#1A1A2E', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, fontSize:12 }}
             labelStyle={{ color:'hsl(210 40% 95%)', marginBottom:4 }}
             itemStyle={{ color:'hsl(210 40% 85%)' }}
-            labelFormatter={fmtDate}
+            labelFormatter={(label: unknown) => fmtDate(String(label ?? ''))}
           />
           {multi && <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />}
           {keys.map((k, i) => (

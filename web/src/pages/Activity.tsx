@@ -70,10 +70,10 @@ export default function Activity() {
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {loading ? Array.from({length:6}).map((_,i) => <StatCardSkeleton key={i} />) : <>
-            <StatCard title="Activity Score"   value={today?.scores.activity} unit="/ 100" color={COLORS.activity} />
+            <StatCard title="Activity Score"   value={today?.scores.activity ?? null} unit="/ 100" color={COLORS.activity} />
             <StatCard title="Steps"            value={activity?.steps?.toLocaleString() ?? null} color={COLORS.activity} />
-            <StatCard title="Active Calories"  value={activity?.active_calories} unit="kcal" color={COLORS.readiness} />
-            <StatCard title="Total Calories"   value={activity?.total_calories}  unit="kcal" color={COLORS.hrv} />
+            <StatCard title="Active Calories"  value={activity?.active_calories ?? null} unit="kcal" color={COLORS.readiness} />
+            <StatCard title="Total Calories"   value={activity?.total_calories ?? null}  unit="kcal" color={COLORS.hrv} />
             <StatCard title="High Activity"    value={fmtSeconds(activity?.high_activity_time)}   color="#F97316" subtitle="vigorous" />
             <StatCard title="Low Activity"     value={fmtSeconds(activity?.low_activity_time)}    color={COLORS.sleep} subtitle="light" />
           </>}
@@ -101,7 +101,7 @@ export default function Activity() {
                   tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
                 <Tooltip
                   contentStyle={{ backgroundColor:'#1A1A2E', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, fontSize:12 }}
-                  formatter={(v: number) => [v.toLocaleString(), 'Steps']}
+                  formatter={(v: unknown) => [(v as number ?? 0).toLocaleString(), 'Steps']}
                 />
                 {/* Goal reference line at 10k */}
                 <Bar dataKey="steps" radius={[5,5,0,0]}>

@@ -141,7 +141,7 @@ export default function Sleep() {
                 <YAxis tick={{ fontSize:10, fill:'hsl(215 20% 55%)' }} tickLine={false} axisLine={false} tickFormatter={v => fmtMinutes(v)} />
                 <Tooltip
                   contentStyle={{ backgroundColor:'#1A1A2E', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, fontSize:12 }}
-                  formatter={(v: number) => [fmtMinutes(v), 'Duration']}
+                  formatter={(v: unknown) => [fmtMinutes(v as number | null), 'Duration']}
                 />
                 <Bar dataKey="mins" radius={[6,6,0,0]}>
                   {stageData.map(d => <Cell key={d.stage} fill={d.color} />)}

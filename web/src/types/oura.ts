@@ -103,6 +103,7 @@ export interface TodaySummary {
   activity: {
     score: number | null; steps: number | null; active_calories: number | null
     total_calories: number | null; contributors: ActivityContributors
+    high_activity_time?: number | null; low_activity_time?: number | null
   } | null
   readiness: {
     score: number | null; temperature_deviation: number | null

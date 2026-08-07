@@ -67,7 +67,9 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 
 ALLOWED_ORIGINS = [
-    "http://localhost:5173",             # Vite dev server
+    "http://localhost:5173",             # Vite dev server (default port)
+    "http://localhost:5174",             # Vite dev server (alt)
+    "http://localhost:5181",             # oura-web-dev preview port
     "http://localhost:3000",             # CRA / RN Metro fallback
     "http://localhost:8091",             # Self (dev)
     "https://oura.stockmaniacs.net",     # Production web (Cloudflare Pages)

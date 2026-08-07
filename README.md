@@ -1,115 +1,196 @@
-<div align="center">
-  <img src="frontend/public/icon.png" alt="Cracked Oura Logo" width="128">
-  <h1>Cracked Oura</h1>
-  <p><b>Free application that gives you full access to your Oura ring data.</b></p>
-  
-  [![GitHub release](https://img.shields.io/github/v/release/EIrno/Cracked-Oura?label=Latest%20Release)](https://github.com/EIrno/Cracked-Oura/releases/latest)
-  ![Status](https://img.shields.io/badge/Status-Alpha-red)
-</div>
+# OuraFree
+
+Self-hosted Oura ring dashboard — web app + iOS app (Android-ready).
+
+Fork of [Cracked-Oura](https://github.com/cracked-oura/cracked-oura), adapted for a multi-client stack:
+FastAPI backend on a VPS → Cloudflare edge → React web + React Native iOS.
 
 ---
 
-### Pay for the ring, not for the app that is not even that good
-Oura ring paywalls the data behind a subscription, but luckily you can export your data from Oura and import it to Cracked Oura.
+## Architecture
 
-**Cracked Oura** is an open-source desktop application that provides full access to your health metrics, stored locally on your machine.
-
-**Key Benefits**
-- **No Subscription:** See all of your Oura ring data without subscription. 
-- **Privacy First:** Your data is stored locally in an SQLite database. It never leaves your computer unless you export it.
-- **Advanced Analytics:** Visualize trends, correlations, and deeper insights than the standard app provides. 
-
-<img width="1470" height="916" alt="Cracked Oura front page" src="https://github.com/user-attachments/assets/cda629a9-5072-4a5f-9e5d-6ddb3873c0f0" />
-
----
-
-## Features
-
-### Oura ring data without subscription
-See all of your Oura ring data without subscription. Thanks to EU's right to data portability, you can export your data from Oura and import it to Cracked Oura. 
-
-**Automation that requests your data from Oura and imports it to Cracked Oura.** This populates the local database with your data. Population can also be done manually by importing a zip file from Oura that you can find in https://membership.ouraring.com/data-export. 
-
-<img width="1470" height="916" alt="Cracked Oura automation" src="https://github.com/user-attachments/assets/8aa42539-f014-4254-8885-9d6dfabf13b2" />
-<img width="1470" height="916" alt="Cracked Oura logn term charts" src="https://github.com/user-attachments/assets/6cbd5345-d81e-4000-ade0-a0ea4e21508c" />
-
-
-### Desktop Dashboard that can be customized
-View your Sleep, Readiness, and Activity scores, etc in a desktop dashboards that is at least as good as the official Oura dashboard. The dashboards can be customized to show the data that you want to see. 
-
-<img width="1470" height="916" alt="Cracked Oura widget editor" src="https://github.com/user-attachments/assets/39103072-e176-4b13-86df-95eaacdd3ac1" />
-<img width="1470" height="916" alt="Cracked Oura layout editor" src="https://github.com/user-attachments/assets/43925f97-9d94-48aa-8b26-36a096499c0c" />
-
-### AI Health Analyst
-Oura's own AI advisor is quite limited. It does not have access to your historical data and cannot answer questions about your health trends, because it has only a few days of data available. 
-
-Cracked Oura can leverage local LLMs to analyze your health data and provide insights. 
-
-> [!NOTE]
-> This feature is still experimental, not documented, and under development and will be improved in the future. 
-
-<img width="1470" height="916" alt="Cracked Oura advisor" src="https://github.com/user-attachments/assets/e9ce6ac2-60da-486f-a01f-8cd03dce6337" />
+```
+Oura Ring → Oura Servers (moi.ouraring.com)
+                   │
+                   │  Playwright automation (daily, 05:45 IST)
+                   │  Downloads personal data export ZIP
+                   ▼
+         ┌─────────────────────┐
+         │   FastAPI + SQLite  │
+         │   contabo-vps:8091  │
+         │   Uvicorn / systemd │
+         └─────────┬───────────┘
+                   │  Cloudflare Tunnel (oura-api.stockmaniacs.net)
+                   │  HTTPS, CORS, X-API-Key auth
+                   │
+          ┌────────┴────────┐
+          ▼                 ▼
+   ┌─────────────┐   ┌─────────────────────┐
+   │   Web App   │   │      iOS App         │
+   │ React/Vite  │   │  React Native/Expo   │
+   │  Tailwind   │   │  expo-router tabs    │
+   │  Recharts   │   │  gifted-charts       │
+   │     CF Pages│   │  TestFlight / App    │
+   │ oura.stock  │   │  com.stockmaniacs   │
+   │ maniacs.net │   │    .ourafree         │
+   └─────────────┘   └─────────────────────┘
+```
 
 ---
 
-## Getting Started
+## Quick start
 
-### Installation
-1.  **Download** the latest release for your operating system:
-    -   [Download for macOS (.dmg)](https://github.com/EIrno/Cracked-Oura/releases)
-    -   [Download for Windows (.exe)](https://github.com/EIrno/Cracked-Oura/releases) *(Coming Soon)*
+### Prerequisites
+- Python 3.11+, Node 18+
+- A VPS with Playwright system deps installed
+- Oura ring + account (any tier — uses data export, not API)
 
-2.  **Install & Run** the application.
-3.  **Login** to your Oura account when prompted to sync your historical data.
-
-
-> [!NOTE]
-> Most of the features are still experimental and under development and will be improved in the future. 
-
-### Troubleshooting
-
-> **"App is damaged and can't be opened"** (macOS)
-> This is a known Gatekeeper issue because the app is not notarized by Apple.
-> To fix, move the app to your `Applications` folder and run this in Terminal:
-> ```bash
-> sudo xattr -cr "/Applications/Cracked Oura.app"
-> ```
-
-> [!NOTE]
-> This project is not affiliated with, associated with, or endorsed by Oura Health Oy. Use at your own risk.
-
----
-
-## For Developers
-
-We welcome contributions.
-
-### Tech Stack
--   **Frontend:** Electron, React, TypeScript, Tailwind
--   **Backend:** Python, FastAPI, SQLite
-
-### Build from Source
+### 1. Backend
 ```bash
-# 1. Clone Repository
-git clone https://github.com/EIrno/Cracked-Oura.git
-cd Cracked-Oura
-
-# 2. Setup Backend
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+cd backend/
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+playwright install chromium --with-deps
 
-# 3. Setup Frontend
-cd ../frontend
-npm install
-npm run dev
+cp .env.example .env          # fill in SECRET_KEY
+uvicorn backend.src.api.main:app --host 0.0.0.0 --port 8091
 ```
 
-### Build for Production
-To create a standalone application installer:
+### 2. Web app
 ```bash
-cd frontend
-npm run build
-# Output will be in frontend/dist-electron/
+cd web/
+npm install
+cp .env.example .env.local     # set VITE_API_URL
+npm run dev                    # http://localhost:5173
 ```
+
+### 3. iOS app
+```bash
+cd mobile/
+npm install
+npx expo start --ios
+# Open Settings → paste API key → Save
+```
+
+---
+
+## Deployment
+
+### Backend (VPS + Cloudflare Tunnel)
+```bash
+# On VPS
+sudo systemctl enable --now oura-free
+# Cloudflare Tunnel → oura-api.stockmaniacs.net → localhost:8091
+```
+
+### Web app (Cloudflare Pages)
+Push to `main` → GitHub Actions → `wrangler pages deploy web/dist`
+
+Custom domain: **oura.stockmaniacs.net** (set in CF Pages dashboard)
+
+### iOS app (EAS Build + TestFlight)
+```bash
+npm install -g eas-cli
+eas login
+eas build --platform ios --profile preview     # simulator (free)
+eas build --platform ios --profile production  # TestFlight ($99/yr Apple)
+eas submit --platform ios
+```
+
+See [mobile/docs/BUILD.md](mobile/docs/BUILD.md) for full guide.
+
+---
+
+## Data sync
+
+Oura data is synced via Playwright automation:
+
+| Trigger | Endpoint | When |
+|---------|----------|------|
+| Daily cron | `POST /api/v1/automation/sync` | 05:45 IST |
+| Manual (web) | Settings → Sync Now | on demand |
+| Manual (iOS) | Today → Sync Now | on demand |
+| API | `POST /api/v1/automation/sync` | any time |
+
+The automation:
+1. Logs in to Oura using a saved session (refreshes with OTP if expired)
+2. Requests a new personal data export
+3. Polls until the ZIP is ready (up to 2.5 hours)
+4. Downloads → parses → ingests into SQLite
+
+**First run requires a one-time OTP** — trigger via the web Settings page or API.
+
+---
+
+## API reference (key endpoints)
+
+All endpoints require `X-API-Key: <your-secret-key>` header.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/health` | Health check |
+| `GET` | `/api/v1/summary/today` | Today's scores + details |
+| `GET` | `/api/v1/summary/week` | 7-day averages + arrays |
+| `GET` | `/api/v1/sleep?days=N` | Sleep history |
+| `GET` | `/api/v1/readiness?days=N` | Readiness history |
+| `GET` | `/api/v1/activity?days=N` | Activity history |
+| `GET` | `/api/v1/hrv?days=N` | HRV history |
+| `GET` | `/api/v1/sync/status` | Sync status + record counts |
+| `POST` | `/api/v1/automation/sync` | Trigger full sync |
+| `POST` | `/api/v1/automation/start-login` | Begin OTP login |
+| `POST` | `/api/v1/automation/submit-otp` | Submit OTP code |
+| `POST` | `/api/v1/automation/download-latest` | Download existing export |
+
+Full docs at `https://oura-api.stockmaniacs.net/docs` (FastAPI Swagger UI).
+
+---
+
+## Adding Android
+
+One command when ready:
+```bash
+eas build --platform android --profile preview   # APK for sideloading (free)
+eas build --platform android --profile production # AAB for Play Store ($25 one-time)
+eas submit --platform android
+```
+
+No code changes needed — the React Native app is already Android-compatible.
+Add `android.buildType` to the relevant `eas.json` profiles if needed.
+
+---
+
+## Environment variables
+
+| File | Variable | Description |
+|------|----------|-------------|
+| `backend/.env` | `SECRET_KEY` | API auth key (generate with `openssl rand -hex 32`) |
+| `web/.env.production` | `VITE_API_URL` | Backend URL |
+| `mobile/.env` | `EXPO_PUBLIC_API_URL` | Backend URL (baked at build time) |
+
+---
+
+## Project structure
+
+```
+oura-free/
+├── backend/          FastAPI + SQLite + Playwright automation
+├── web/              React / Vite / Tailwind / Recharts
+├── mobile/           React Native / Expo / expo-router
+│   ├── src/
+│   │   ├── screens/  TodayScreen, SleepScreen, ReadinessScreen,
+│   │   │             ActivityScreen, SettingsScreen
+│   │   ├── components/ ScoreRing, StatCard, TrendChart, SyncButton
+│   │   ├── api/      Axios client + SecureStore auth
+│   │   ├── hooks/    useOuraData (cached query hook)
+│   │   └── types/    oura.ts — shared domain types
+│   └── docs/         BUILD.md — EAS + TestFlight guide
+├── upstream-source/  Original Cracked-Oura fork (reference + git root)
+└── docs/             Architecture, folder structure
+```
+
+---
+
+## Credits
+
+Based on [Cracked-Oura](https://github.com/cracked-oura/cracked-oura).
+Self-hosted for personal use — respect Oura's Terms of Service.

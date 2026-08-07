@@ -128,7 +128,7 @@ async def run_full_sync_task(db_session_factory):
 # Chat / Advisor Endpoints
 # -----------------------------------------------------------------------------
 
-@router.post("/api/advisor/chat")
+@router.post("/api/v1/advisor/chat")
 async def chat(request: ChatRequest):
     """
     Interacts with the AI Advisor (LangChain SQL Agent).
@@ -150,7 +150,7 @@ async def chat(request: ChatRequest):
 # Automation & Authentication Endpoints
 # -----------------------------------------------------------------------------
 
-@router.post("/api/automation/start-login")
+@router.post("/api/v1/automation/start-login")
 async def start_login(request: LoginRequest):
     """Initiates the login process via Playwright."""
     try:
@@ -159,7 +159,7 @@ async def start_login(request: LoginRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/api/automation/submit-otp")
+@router.post("/api/v1/automation/submit-otp")
 async def submit_otp(request: OTPRequest):
     """Submits the OTP code to the active Playwright session."""
     try:
@@ -168,7 +168,7 @@ async def submit_otp(request: OTPRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/api/automation/request-export")
+@router.post("/api/v1/automation/request-export")
 async def request_export(background_tasks: BackgroundTasks):
     """
     Starts the full export -> wait -> download -> ingest process in the background.
@@ -180,12 +180,12 @@ async def request_export(background_tasks: BackgroundTasks):
     background_tasks.add_task(run_full_sync_task, SessionLocal)
     return {"message": "Full sync started in background."}
 
-@router.post("/api/automation/check-status")
+@router.post("/api/v1/automation/check-status")
 async def check_status():
     """Returns the current automation status from the persistent config."""
     return config_manager.get_config()
 
-@router.post("/api/automation/download")
+@router.post("/api/v1/automation/download")
 async def download_export(db: Session = Depends(get_db)):
     """
     Attempts to download an *existing* export from Oura Cloud and ingest it.
@@ -211,7 +211,7 @@ async def download_export(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/api/automation/clear-session")
+@router.post("/api/v1/automation/clear-session")
 async def clear_session():
     """Clears the automation session (cookies/storage)."""
     try:
@@ -224,7 +224,7 @@ async def clear_session():
 # Settings Endpoints
 # -----------------------------------------------------------------------------
 
-@router.post("/api/settings")
+@router.post("/api/v1/settings")
 async def save_settings(request: SettingsRequest):
     """Updates global application settings."""
     try:
@@ -237,7 +237,7 @@ async def save_settings(request: SettingsRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/api/settings")
+@router.get("/api/v1/settings")
 async def get_settings():
     """Retrieves current application settings."""
     try:
@@ -253,7 +253,7 @@ async def get_settings():
 # Dashboard Configuration Endpoints
 # -----------------------------------------------------------------------------
 
-@router.get("/api/dashboard")
+@router.get("/api/v1/dashboard")
 async def get_dashboard_config():
     """Retrieves the saved dashboard layout and widgets."""
     try:
@@ -262,7 +262,7 @@ async def get_dashboard_config():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/api/dashboard")
+@router.post("/api/v1/dashboard")
 async def save_dashboard_config(request: DashboardConfigRequest):
     """Saves the dashboard configuration."""
     try:
@@ -287,7 +287,7 @@ async def save_dashboard_config(request: DashboardConfigRequest):
 # Data Access Endpoints
 # -----------------------------------------------------------------------------
 
-@router.get("/api/days/{date_str}", response_model=DayDataResponse)
+@router.get("/api/v1/days/{date_str}", response_model=DayDataResponse)
 async def get_day_data(
     date_str: str, 
     include_details: bool = False,
@@ -354,7 +354,7 @@ async def get_day_data(
         logger.error(f"Error fetching day data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/api/query")
+@router.get("/api/v1/query")
 def query_data(
     path: str,
     start_date: Optional[date] = None,
@@ -460,7 +460,7 @@ def query_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/schema")
+@router.get("/api/v1/schema")
 def get_schema():
     """
     Introspects the database models to return a schema definition.
@@ -524,7 +524,7 @@ def get_schema():
 # Data Ingestion Endpoints (Uploads)
 # -----------------------------------------------------------------------------
 
-@router.post("/api/ingest/zip")
+@router.post("/api/v1/ingest/zip")
 async def ingest_zip(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
     Endpoint for uploading and ingesting an Oura export ZIP file manually.

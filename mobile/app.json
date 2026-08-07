@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "OuraFree",
+    "slug": "oura-free",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "ourafree",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "bundleIdentifier": "com.stockmaniacs.ourafree",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.stockmaniacs.ourafree",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F0F1A",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

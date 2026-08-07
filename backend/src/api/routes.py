@@ -524,6 +524,67 @@ def get_schema():
 # Data Ingestion Endpoints (Uploads)
 # -----------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Sync status + trigger — frontend-friendly wrappers
+# ---------------------------------------------------------------------------
+
+@router.get("/api/v1/sync/status")
+async def sync_status(db: Session = Depends(get_db)):
+    """
+    Returns sync status in the shape the web/mobile frontend expects:
+      { status, last_sync, next_sync, schedule_time, record_counts }
+    Translates the internal config keys (last_run/next_run/Processing)
+    to the frontend contract.
+    """
+    cfg = config_manager.get_config()
+
+    # Translate "Processing" → "Running" for the frontend type
+    raw_status = cfg.get("status", "Idle")
+    status = "Running" if raw_status == "Processing" else raw_status
+
+    # Count rows per table
+    record_counts: dict = {}
+    table_models = {
+        "sleep":         Sleep,
+        "activity":      Activity,
+        "readiness":     Readiness,
+        "resilience":    Resilience,
+        "sleep_session": SleepSession,
+        "workout":       Workout,
+        "meditation":    Meditation,
+        "heart_rate":    HeartRate,
+        "temperature":   Temperature,
+        "ring_battery":  RingBattery,
+        "tag":           Tag,
+    }
+    for name, model in table_models.items():
+        try:
+            record_counts[name] = db.query(func.count()).select_from(model).scalar() or 0
+        except Exception:
+            record_counts[name] = 0
+
+    return {
+        "status":        status,
+        "last_sync":     cfg.get("last_run"),
+        "next_sync":     cfg.get("next_run"),
+        "schedule_time": cfg.get("schedule_time"),
+        "record_counts": record_counts,
+    }
+
+
+@router.post("/api/v1/automation/sync")
+async def trigger_sync(background_tasks: BackgroundTasks):
+    """
+    Alias for /api/v1/automation/request-export.
+    Starts the full export → download → ingest pipeline in the background.
+    """
+    cfg = config_manager.get_config()
+    if cfg.get("status") == "Processing":
+        raise HTTPException(status_code=409, detail="Sync already in progress")
+    background_tasks.add_task(run_full_sync_task, SessionLocal)
+    return {"message": "Sync started", "status": "Running"}
+
+
 @router.post("/api/v1/ingest/zip")
 async def ingest_zip(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """

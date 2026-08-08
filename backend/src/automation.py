@@ -461,24 +461,30 @@ class OuraAutomator:
             return False
 
     async def _wait_for_processing(self) -> bool:
-        """Polls until the request button is re-enabled, indicating report generation is complete."""
+        """Polls until the Download button appears OR the Request button re-enables."""
         max_retries = 30 # Approx 2.5 hours total wait time
         poll_interval = 300 # 5 minutes between checks
-        
+
         for i in range(max_retries):
-            # Check if Request button is enabled again (indicating download is ready)
+            # PRIMARY: check if the Download button is visible (Oura shows this when ZIP is ready)
+            dl_btn = self.page.locator("button[aria-label='Download data']").first
+            if await dl_btn.is_visible():
+                logger.info(f"Download button appeared at attempt {i+1}. Export ready!")
+                return True
+
+            # FALLBACK: check if the Request button re-enabled
             request_btn = self.page.locator('[data-testid="pageSubtitle"] + button').first
             if not await request_btn.is_visible():
                 request_btn = self.page.locator('main button').first
-            
             if await request_btn.is_visible() and await request_btn.is_enabled():
-                return True # Export is ready
-            
+                logger.info(f"Request button re-enabled at attempt {i+1}. Export ready!")
+                return True
+
             logger.info(f"Processing... (Attempt {i+1}/{max_retries}) - Next check in {poll_interval}s")
             await self.page.wait_for_timeout(poll_interval * 1000)
             await self.page.reload()
             await self.page.wait_for_load_state("networkidle")
-            
+
         return False
 
     async def _download_file(self, save_dir: str) -> Optional[str]:

@@ -187,10 +187,15 @@ class OuraAutomator:
             raise e
 
     def _is_logged_in(self) -> bool:
-        """Determines if user is logged in based on current URL."""
+        """Determines if user is logged in based on current URL.
+
+        We are logged in if we're anywhere on the membership domain that is NOT
+        a login/authn page. Being on /data-export, /, or any subpage counts.
+        """
         if not self.page: return False
-        url = self.page.url.rstrip('/')
-        return (url == self.base_url) and ("login" not in url) and ("authn" not in url)
+        url = self.page.url
+        on_membership = self.base_url.rstrip('/') in url
+        return on_membership and ("login" not in url) and ("authn" not in url)
 
     async def _perform_login_actions(self) -> Dict[str, str]:
         """Interacts with the login form, handling email submission and checking for OTP requirements."""

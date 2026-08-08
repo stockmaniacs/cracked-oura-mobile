@@ -238,7 +238,16 @@ async def download_latest_existing(background_tasks: BackgroundTasks):
 # Background task helpers (unchanged from upstream)
 # ---------------------------------------------------------------------------
 
+# Guard flag — only one automation task runs at a time
+_task_running = False
+
+
 async def run_download_existing_task():
+    global _task_running
+    if _task_running:
+        logger.info("Background worker: Task already running — skipping download.")
+        return
+    _task_running = True
     logger.info("Starting download existing task...")
     try:
         cfg = config_manager.get_config()
@@ -272,12 +281,20 @@ async def run_download_existing_task():
     except Exception as e:
         logger.error(f"Download task failed: {e}")
         await automator.cleanup()
+    finally:
+        _task_running = False
 
 
 async def run_ingestion_task(force=False):
+    global _task_running
     cfg = config_manager.get_config()
     if not force and not cfg.get("is_active", True):
         return
+
+    if _task_running:
+        logger.info("Background worker: Task already running — skipping scheduled run.")
+        return
+    _task_running = True
 
     logger.info("Background worker: Starting ingestion task...")
     config_manager.update_status("Starting...")
@@ -317,6 +334,8 @@ async def run_ingestion_task(force=False):
         logger.error(f"Background worker error: {e}")
         config_manager.update_status(f"Error: {str(e)}")
         await automator.cleanup()
+    finally:
+        _task_running = False
 
 
 async def process_ingestion(zip_path):

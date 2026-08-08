@@ -455,6 +455,27 @@ class OuraAutomator:
 
     async def _click_request_export_button(self) -> bool:
         """Finds and clicks the 'Request data export' button, handling various states (disabled, aria attributes)."""
+        # Take screenshot and dump page title for diagnosis
+        try:
+            await self.page.screenshot(path="/tmp/oura_export_page.png")
+            title = await self.page.title()
+            logger.info(f"Export page title: '{title}' | URL: {self.page.url}")
+            # Log all button texts to understand what's available
+            buttons = await self.page.locator('button').all()
+            btn_labels = []
+            for btn in buttons[:10]:
+                try:
+                    txt = (await btn.inner_text()).strip()
+                    aria = await btn.get_attribute("aria-label") or ""
+                    disabled = await btn.get_attribute("disabled")
+                    aria_dis = await btn.get_attribute("aria-disabled")
+                    btn_labels.append(f"'{txt or aria}' disabled={disabled} aria-disabled={aria_dis}")
+                except Exception:
+                    pass
+            logger.info(f"Buttons on page: {btn_labels}")
+        except Exception as e:
+            logger.warning(f"Debug screenshot/log failed: {e}")
+
         # Find Request Button (Try likely selectors)
         target_btn = self.page.locator('[data-testid="pageSubtitle"] + button').first
         try:
@@ -470,6 +491,7 @@ class OuraAutomator:
                  pass
 
         if not await target_btn.is_visible():
+            logger.warning("No button found in [data-testid='pageSubtitle'] or main — cannot request export")
             return False
 
         # Wait briefly for hydration
@@ -480,7 +502,8 @@ class OuraAutomator:
         aria_disabled = await target_btn.get_attribute("aria-disabled") == "true"
 
         if is_disabled or aria_disabled:
-             return False
+            logger.info(f"Request button is disabled (disabled={is_disabled}, aria-disabled={aria_disabled}) — export already pending")
+            return False
 
         # Attempt Click 
         try:

@@ -197,17 +197,57 @@ class OuraAutomator:
         if "login" not in self.page.url and "authn" not in self.page.url:
              await self.page.goto(f"{self.base_url}/login", timeout=30000)
 
-        # Fill Email
-        logger.info(f"Filling email: {self.email}")
-        email_input = self.page.locator("input[name='username']")
-        if not await email_input.is_visible():
-             email_input = self.page.locator("input[type='email']")
-        
-        if not await email_input.is_visible():
+        # Wait for the login page to fully settle (handles mid-redirect race condition)
+        try:
+            await self.page.wait_for_load_state("domcontentloaded", timeout=15000)
+        except Exception:
+            pass
+        try:
+            await self.page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass  # networkidle may not fire on auth pages with long-polling
+
+        # Wait for any input to appear before trying selectors
+        try:
+            await self.page.wait_for_selector("input", timeout=12000)
+        except Exception:
+            logger.warning("No input found after 12s wait")
+
+        logger.info(f"Filling email on page: {self.page.url}")
+
+        # Fill Email — try all known selectors in priority order
+        email_input = None
+        for selector in [
+            "input[name='username']",
+            "input[id='username']",
+            "input[type='email']",
+            "input[placeholder='Enter email']",
+        ]:
+            try:
+                loc = self.page.locator(selector).first
+                if await loc.is_visible(timeout=2000):
+                    email_input = loc
+                    logger.info(f"Found email input with selector: {selector}")
+                    break
+            except Exception:
+                continue
+
+        if not email_input:
+            # Capture debug screenshot before raising
+            try:
+                await self.page.screenshot(path="/tmp/oura_login_debug.png")
+                logger.error(f"Debug screenshot saved to /tmp/oura_login_debug.png")
+            except Exception:
+                pass
+            logger.error(f"Current URL: {self.page.url}")
             raise Exception("Could not find email input.")
 
         await email_input.fill(self.email)
-        await self.page.dispatch_event("input[name='username']", 'input') 
+        # Fire input event on the username field (may be needed for React-controlled inputs)
+        try:
+            await self.page.dispatch_event("input[name='username']", 'input')
+        except Exception:
+            pass 
         
         await self._click_submit()
         

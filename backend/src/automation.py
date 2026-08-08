@@ -413,21 +413,33 @@ class OuraAutomator:
             logger.error(f"Download automation failed: {e}")
             return {"status": "error", "message": str(e)}
 
+    async def _dismiss_cookie_banner(self):
+        """Accepts the cookie consent banner if present, so it doesn't obscure page content."""
+        try:
+            accept_btn = self.page.locator("button:has-text('Accept All Cookies'), button:has-text('Accept All'), button:has-text('Hyväksy kaikki')").first
+            if await accept_btn.is_visible(timeout=3000):
+                logger.info("Dismissing cookie consent banner...")
+                await accept_btn.click()
+                await self.page.wait_for_timeout(1000)
+        except Exception:
+            pass  # No banner or already dismissed
+
     async def _navigate_to_export_page(self) -> bool:
         """Navigates to the export page, handling potential login redirects and re-tries."""
         logger.info(f"Navigating to {self.export_url}")
         await self.page.goto(self.export_url, timeout=60000)
-        
+
         # Poll for URL correctness (handling redirects)
         for _ in range(10): # 10s timeout
             try:
                 await self.page.wait_for_load_state("networkidle", timeout=2000)
-            except: 
+            except:
                 pass
-                
+
             current_url = self.page.url
             if "/data-export" in current_url:
                 logger.info("Successfully arrived at data-export page.")
+                await self._dismiss_cookie_banner()
                 return True
             
             # Handle Login Redirect
@@ -529,24 +541,42 @@ class OuraAutomator:
         poll_interval = 300 # 5 minutes between checks
 
         for i in range(max_retries):
+            # Dismiss cookie banner so it doesn't hide content
+            await self._dismiss_cookie_banner()
+
             # PRIMARY: check if the Download button is visible (Oura shows this when ZIP is ready)
             dl_btn = self.page.locator("button[aria-label='Download data']").first
             if await dl_btn.is_visible():
                 logger.info(f"Download button appeared at attempt {i+1}. Export ready!")
                 return True
 
-            # FALLBACK: check if the Request button re-enabled
+            # Also check via DOM (in case of CSS overlap)
+            try:
+                dl_count = await self.page.locator("button[aria-label='Download data']").count()
+                if dl_count > 0:
+                    logger.info(f"Download button in DOM (count={dl_count}) but not visible — forcing click")
+                    await self.page.locator("button[aria-label='Download data']").first.scroll_into_view_if_needed()
+                    return True
+            except Exception:
+                pass
+
+            # FALLBACK: check if the Request button re-enabled (export expired/ready for new request)
             request_btn = self.page.locator('[data-testid="pageSubtitle"] + button').first
             if not await request_btn.is_visible():
                 request_btn = self.page.locator('main button').first
             if await request_btn.is_visible() and await request_btn.is_enabled():
-                logger.info(f"Request button re-enabled at attempt {i+1}. Export ready!")
-                return True
+                logger.info(f"Request button re-enabled at attempt {i+1}. Clicking to request a new export...")
+                await request_btn.click()
+                await self.page.wait_for_timeout(3000)
+                # Continue polling for the Download button
 
             logger.info(f"Processing... (Attempt {i+1}/{max_retries}) - Next check in {poll_interval}s")
             await self.page.wait_for_timeout(poll_interval * 1000)
             await self.page.reload()
-            await self.page.wait_for_load_state("networkidle")
+            try:
+                await self.page.wait_for_load_state("networkidle", timeout=15000)
+            except Exception:
+                pass
 
         return False
 
